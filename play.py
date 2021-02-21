@@ -9,8 +9,8 @@ import argparse
 import subprocess
 from typing import Dict, List
 
-DEFAULT_IMAGE = "vulkan-lutris"
-VOLUME_NAME = "lutrishome"
+DEFAULT_IMAGE = "wine-remote"
+VOLUME_NAME = "winehome"
 SHM_SIZE = "4g"
 
 
@@ -128,7 +128,15 @@ def main():
     config = ContainerRuntime(DEFAULT_IMAGE)
     config.container.start()
     for data in config.socket:
-        print(data)
+        # No use for header yet
+        # header = data[:8]
+        body = data[8:]
+        print(body.decode("utf-8"), end="")
+        # print("NEWLINE")
+
+
+def parse_data():
+    pass
 
 
 if __name__ == '__main__':
