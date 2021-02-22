@@ -7,7 +7,7 @@ Game installation and management is handled with [Lutris](https://lutris.net/) w
 ## Why the hassle
 
   * Setting up your specific GPU drivers with Vulkan support, Wine and other mandatory software comes with a lot of dependencies, and you *might not always want* to get those in your host system
-  * Isolated code execution, at least on some level. Exposed components are listed on [exposed volumes](#exposed_components_from_the_host) section.
+  * Isolated code execution, at least on some level. Exposed components are listed on [exposed volumes](#exposed-components-from-the-host) section.
   * Easier version upgrade on those packages
   * If you need some space, it is easy to just delete Docker image(s) but maintain the game data itself from volumes.
 
@@ -58,7 +58,7 @@ file /tmp/pulse-socket
 
 ## Exposed components from the host
 
-Following paths are exposed with read-only binds from the host system into container.
+Following paths are exposed with read-only binds from the ~~~~host system into container.
 
  * Xorg server - `/tmp/.X11-unix`
  * PulseAudio socket - `/tmp/pulse-socket`
