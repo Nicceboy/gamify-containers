@@ -1,15 +1,22 @@
 # Gamifying containers - play your Windows games on Linux containers with Lutris and Wine
 
-This project essentially attempts to set suitable environment for running Windows games from Linux containers. Python script is used to run specifically made container.
+This project essentially attempts to set suitable environment for running Windows games from Linux containers. Python script is used to run specifically made container maybe with easier way. Docker has been used as container engine.
 
 Game installation and management is handled with [Lutris](https://lutris.net/) which attempts to automate a lot of painful stuff, such as managing suitable Wine versions, required dependencies for game to be functional and handling runner environments such as [dxvk](https://github.com/doitsujin/dxvk) for DirectX to Vulkan transitions for performance boost.
+
+In the end, provided Python script only opens the graphical user interface of the Lutris from the container.
+
+Game data, Wine prefix and Lutris environment is stored in volume.
+Runtime Linux is defined in Docker image. See Dockerfile for [reference.](Dockerfile)
 
 ## Why the hassle
 
   * Setting up your specific GPU drivers with Vulkan support, Wine and other mandatory software comes with a lot of dependencies, and you *might not always want* to get those in your host system
-  * Isolated code execution, at least on some level. Exposed components are listed on [exposed volumes](#exposed-components-from-the-host) section.
+  * Isolated code execution, at least on some level. Exposed components are listed on [exposed components](#exposed-components-from-the-host) section.
   * Easier version upgrade on those packages
   * If you need some space, it is easy to just delete Docker image(s) but maintain the game data itself from volumes.
+
+This has probably downside for performance, but sometimes it is not that meaningful.
 
 ## Prerequisites
   * Docker Engine
@@ -25,13 +32,14 @@ If you don't have Xorg display server already, you might want to skip this proje
 
 However, sometimes in the log-in phase for Linux distribution, you can select the environment, e.g. Gnome With Xorg if it is installed, but not used.
 
+
 ## Configuring sound
 
 This step is not automated, user should be aware of the changes.
 
 To be able to get sound from the container, Unix socket for PulseAudio must be created beforehand. This can be achieved by modifying configuration files and then restarting server.
 
-Server will enabled to be accessed by other users.
+Server will enabled to be accessed by other users who belong to `pulseaudio` group.
 Look for user-specific pulse configuration file in path:
 ```
 cat "${HOME}/.config/pulse/default.pa"
@@ -39,26 +47,29 @@ cat "${HOME}/.config/pulse/default.pa"
 Create/modify the file with following contents:
 ```ini
 .include /etc/pulse/default.pa
-load-module module-native-protocol-unix 
-auth-anonymous=1 
-socket=/tmp/pulse-socket
+load-module module-native-protocol-unix auth-group=pulseaudio socket=/tmp/pulse-socket
 ```
 
-Then restart server
+Default socket path fill be `/tmp/pulse-socket`.Then restart server.
 ```cmd
 pulseaudio -k
 pulseaudio --start
 pulseaudio --check
 ```
-Socket should be available 
+Socket should be available. 
 ```cmd
-file /tmp/pulse-socket
+$ file /tmp/pulse-socket
+/tmp/pulse-socket: socket
 ```
+
+## Graphic Cards
+
+By default, graphic cards are passed as devices into container from the path `/dev/dri`. Provided image has AMD and Intel drivers installed, with 32 and 64-bit Vulkan support. NVIDIA drivers should be installed manually, if there is need for them.
 
 
 ## Exposed components from the host
 
-Following paths are exposed with read-only binds from the ~~~~host system into container.
+Following paths are exposed with read-only binds from the host system into container.
 
  * Xorg server - `/tmp/.X11-unix`
  * PulseAudio socket - `/tmp/pulse-socket`
@@ -66,3 +77,11 @@ Following paths are exposed with read-only binds from the ~~~~host system into c
  Passed as devices
  * Sound cards - `/dev/snd`
  * Graphic cards - `/dev/dri`
+ 
+ ## Command line commands without using Python
+ 
+ TODO
+ 
+ ## License 
+ 
+ MIT
