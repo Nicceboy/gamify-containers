@@ -1,5 +1,6 @@
 #!/bin/python3
 import io
+from time import time
 import docker
 import os
 import pathlib
@@ -7,6 +8,7 @@ import logging
 import sys
 import argparse
 import subprocess
+import tarfile
 from typing import Dict, List
 
 DEFAULT_IMAGE = "wine-remote"
@@ -28,8 +30,7 @@ class ContainerRuntime:
         self.main_volume = "/home/wineuser"
         self.define_volumes()
         self.pass_devices()
-        self.pass_environment()
-        self.set_x_auth_token()
+        self.get_environment()
         try:
             self.image = self.client.images.get(image)
         except docker.errors.NotFound:
@@ -40,6 +41,7 @@ class ContainerRuntime:
                                                        devices=self.devices,
                                                        environment=self.envs, shm_size=SHM_SIZE,
                                                        volumes=self.volumes)
+        self.set_x_auth_token()
         self.socket = self.container.attach_socket(
             params={"logs": False, "stream": True, "stdout": True, "stderr": True, "stdin": False})
 
@@ -81,7 +83,7 @@ class ContainerRuntime:
         for key in self.volumes.keys():
             self.logger.info(key)
 
-    def pass_environment(self):
+    def get_environment(self):
         # Display value for Xorg
         self.envs["DISPLAY"] = os.environ.get("DISPLAY")
 
@@ -94,21 +96,30 @@ class ContainerRuntime:
             self.logger.debug(f"GPUs found from the path: {gpu_path}")
 
     def set_x_auth_token(self):
-        # Use xauth to get x-authority token
+        # Use xauth to get x-authority token to grant access for container
         output = subprocess.run(["xauth", "list"], capture_output=True)
         if not output.stderr:
             buf = io.StringIO(output.stdout.decode("utf-8"))
             first_line = buf.readline()
             key = first_line.split()[-1]
+            # Convert to bytes... again
+            key = key.encode("utf-8")
+            # Copy data into container to avoid volume usage
+            tar_stream = io.BytesIO()
+            tar_file = tarfile.TarFile(fileobj=tar_stream, mode="w")
+            tar_info = tarfile.TarInfo(name='.Xkey')
+            tar_info.size = len(key)
+            tar_info.mtime = time()
+            tar_file.addfile(tar_info, io.BytesIO(key))
+            tar_file.close()
+            tar_stream.seek(0)
+            resp = self.container.put_archive("/root/", tar_stream)
+            if not resp:
+                self.logger.error("Failed to upload xauth information into container. Display won't work.")
+            else:
+                self.logger.info(f"Xauthority token copied into container to grant display access.")
         else:
             self.logger.error("You must have 'xauth' command line command available to make display to work.")
-
-        xauth_token_path = pathlib.Path.home() / ".docker-lutris.Xkey"
-        self.logger.info(f"Creating new Xauthority token to be shared for container in path {xauth_token_path}")
-        with xauth_token_path.open("w") as f:
-            f.write(key)
-        # Read-only bind mount for Xkey
-        self.volumes[xauth_token_path] = {"bind": "/root/.Xkey", "mode": "ro"}
 
 
 def main():
