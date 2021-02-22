@@ -54,13 +54,6 @@ class ContainerRuntime:
             self.logger.debug(f"Pulseaudio found in path: {pulse_path}")
         else:
             self.logger.warning(f"Socket for Pulseaudio from the path '{pulse_path}' not found. Sounds will not work.")
-        # Sound
-        snd_path = pathlib.Path("/dev/snd")
-        if snd_path.is_dir():
-            self.volumes[str(snd_path)] = {"bind": str(snd_path), "mode": "ro"}
-            self.logger.debug(f"Sound cards found in path: {snd_path}")
-        else:
-            self.logger.warning(f"No sound card devices found from the path {snd_path}")
         # Xorg socket, read-only
         x_path = pathlib.Path("/tmp/.X11-unix")
         if x_path.is_dir():
@@ -92,11 +85,19 @@ class ContainerRuntime:
         # Tested only on integrated Intel
         gpu_path = pathlib.Path("/dev/dri")
         if gpu_path.is_dir():
-            self.devices.append("/dev/dri:/dev/dri")
+            self.devices.append(f"{str(gpu_path)}:{str(gpu_path)}")
             self.logger.debug(f"GPUs found from the path: {gpu_path}")
+        else:
+            self.logger.warning(f"DRI path not found from: {gpu_path}. GPUs might not be accessible.")
+        snd_path = pathlib.Path("/dev/snd")
+        if snd_path.is_dir():
+            self.devices.append(f"{str(snd_path)}:{str(snd_path)}")
+            self.logger.debug(f"Sound cards found in path: {snd_path}")
+        else:
+            self.logger.warning(f"No sound card devices found from the path {snd_path}")
 
     def set_x_auth_token(self):
-        # Use xauth to get x-authority token to grant access for container
+        # Use xauth to get x-authority token to grant display access for container
         output = subprocess.run(["xauth", "list"], capture_output=True)
         if not output.stderr:
             buf = io.StringIO(output.stdout.decode("utf-8"))
@@ -110,6 +111,7 @@ class ContainerRuntime:
             tar_info = tarfile.TarInfo(name='.Xkey')
             tar_info.size = len(key)
             tar_info.mtime = time()
+            tar_info.mode = 0o0600
             tar_file.addfile(tar_info, io.BytesIO(key))
             tar_file.close()
             tar_stream.seek(0)
@@ -119,7 +121,9 @@ class ContainerRuntime:
             else:
                 self.logger.info(f"Xauthority token copied into container to grant display access.")
         else:
-            self.logger.error("You must have 'xauth' command line command available to make display to work.")
+            self.logger.error(
+                "You must have 'xauth' command line command available and to return"
+                " Xauthority information to make display to work.")
 
 
 def main():
@@ -127,18 +131,14 @@ def main():
     parser.add_argument("-l", "--log", dest="log_level", choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help="Set the logging level", default=None)
     args = parser.parse_args(args=sys.argv[1:])
-    # if len(sys.argv) > 1:
-    #     args = parser.parse_args(args=sys.argv[1:])
-    # else:
-    #     args = parser.parse_args(args=['--help'])
     log_level = args.log_level if args.log_level else 'INFO'
     if log_level not in {'DEBUG'}:
         sys.tracebacklimit = 0  # track traces only when debugging
     logging.basicConfig(format='%(name)s: %(message)s', level=getattr(logging, log_level))
 
-    config = ContainerRuntime(DEFAULT_IMAGE)
-    config.container.start()
-    for data in config.socket:
+    runtime = ContainerRuntime(DEFAULT_IMAGE)
+    runtime.container.start()
+    for data in runtime.socket:
         # No use for header yet
         # header = data[:8]
         body = data[8:]
