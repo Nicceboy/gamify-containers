@@ -1,4 +1,3 @@
-#!/bin/python3
 import io
 from time import time
 import docker
@@ -136,6 +135,8 @@ class ContainerRuntime:
                 resp = self.upload_tar("pulse_cookie", f"/root/", data)
                 if not resp:
                     self.logger.warning("Failed to upload pulseaudio auth token.")
+                else:
+                    self.logger.info("Pulseaudio cookie copied into container.")
         else:
             self.logger.warning(f"No pulse token found from the path {pulse_cookie_full}")
 
