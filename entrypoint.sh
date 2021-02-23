@@ -30,5 +30,10 @@ if [ -f /root/.Xauthority ]; then
     cp /root/.Xauthority "${USER_HOME}"
     chown "${USER_UID}":"${USER_GID}" "${USER_HOME}/.Xauthority"
 fi
+# Copy pulseaudio auth token
+if [ -f /root/pulse_cookie ]; then
+    cp /root/pulse_cookie "${USER_HOME}/.config/pulse/cookie"
+    chown "${USER_UID}":"${USER_GID}" "${USER_HOME}/.config/pulse/cookie"
+fi
 # Switch to non-root user
 exec gosu "${USER_NAME}" "$@"

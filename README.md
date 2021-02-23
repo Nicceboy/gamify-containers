@@ -1,10 +1,10 @@
 # Gamifying containers - play your Windows games on Linux containers with Lutris and Wine
 
-This project essentially attempts to set suitable environment for running Windows games from Linux containers. Python script is used to run specifically made container maybe with easier way. Docker has been used as container engine.
+This project essentially attempts to set suitable environment for running Windows games from Linux containers. Python script is used to run specifically made container. Docker has been used as container engine.
 
 Game installation and management is handled with [Lutris](https://lutris.net/) which attempts to automate a lot of painful stuff, such as managing suitable Wine versions, required dependencies for game to be functional and handling runner environments such as [dxvk](https://github.com/doitsujin/dxvk) for DirectX to Vulkan transitions for performance boost.
 
-In the end, provided Python script only opens the graphical user interface of the Lutris from the container.
+In practice, provided Python script opens the graphical user interface of the Lutris from the container while configuring display and sound redirections.
 
 Game data, Wine prefix and Lutris environment is stored in volume.
 Runtime Linux is defined in Docker image. See Dockerfile for [reference.](Dockerfile)
@@ -39,7 +39,11 @@ This step is not automated, user should be aware of the changes.
 
 To be able to get sound from the container, Unix socket for PulseAudio must be created beforehand. This can be achieved by modifying configuration files and then restarting server.
 
-Server will enabled to be accessed by other users who belong to `pulseaudio` group.
+Server access will enabled by copying user specific PulseAudio cookie into container. By default it is looked from the path:
+```
+~/.config/pulse/cookie
+```
+
 Look for user-specific pulse configuration file in path:
 ```
 cat "${HOME}/.config/pulse/default.pa"
@@ -47,10 +51,10 @@ cat "${HOME}/.config/pulse/default.pa"
 Create/modify the file with following contents:
 ```ini
 .include /etc/pulse/default.pa
-load-module module-native-protocol-unix auth-group=pulseaudio socket=/tmp/pulse-socket
+load-module module-native-protocol-unix socket=/tmp/pulse-socket
 ```
 
-Default socket path fill be `/tmp/pulse-socket`.Then restart server.
+Default socket path fill be at `/tmp/pulse-socket`. Then restart server.
 ```cmd
 pulseaudio -k
 pulseaudio --start
@@ -65,7 +69,6 @@ $ file /tmp/pulse-socket
 ## Graphic Cards
 
 By default, graphic cards are passed as devices into container from the path `/dev/dri`. Provided image has AMD and Intel drivers installed, with 32 and 64-bit Vulkan support. NVIDIA drivers should be installed manually, if there is need for them.
-
 
 ## Exposed components from the host
 
