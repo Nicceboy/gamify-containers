@@ -28,10 +28,6 @@ On Debian based system, packages can be installed with
 ```
 apt-get update && apt-get install pulseaudio docker.io python3
 ```
-If you don't have Xorg display server already, you might want to skip this project for now.
-
-However, sometimes in the log-in phase for Linux distribution, you can select the environment, e.g. Gnome With Xorg if it is installed, but not used.
-
 
 ## Configuring sound
 
@@ -63,10 +59,14 @@ $ file /tmp/pulse-socket
 /tmp/pulse-socket: socket
 ```
 
-## Configuring Display
+## Display Server
 
-Currently only X server is supported.
-Xauthority token is copied into container and Xorg Unix socket is shared as volume in to container.
+At the moment, pure Wayland applications are not supported.
+X applications are still usable with Wayland because it provides XWayland compositor which is intended for them. 
+
+There is difference how XWayland and traditional X server behaves; XWayland seems to require same UID than server itself, when socket is accessed. Regular X does not. This has impact for user namespace on underlying container; same needs to be used and therefore less isolation is achieved.
+
+Xauthority token is copied into container and X Unix socket is shared as volume in to container.
 
 By default, path `/tmp/.X11-unix` will be used.
 

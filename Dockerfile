@@ -67,7 +67,7 @@ RUN mkdir -p /tmp/lutris && \
     rm -rf /tmp/lutris
 
 # Adduser
-ENV USER_UID=1111
+ENV USER_UID=1000
 ENV USER_GID=${USER_UID}
 ENV USER_NAME="lutris"
 ENV USER_HOME="/home/${USER_NAME}"

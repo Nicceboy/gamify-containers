@@ -32,6 +32,7 @@ if [ -f /root/.Xauthority ]; then
 fi
 # Copy pulseaudio auth token
 if [ -f /root/pulse_cookie ]; then
+    mkdir -p "${USER_HOME}/.config/pulse/"
     cp /root/pulse_cookie "${USER_HOME}/.config/pulse/cookie"
     chown "${USER_UID}":"${USER_GID}" "${USER_HOME}/.config/pulse/cookie"
 fi

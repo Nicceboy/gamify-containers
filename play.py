@@ -47,6 +47,8 @@ class ContainerRuntime:
         # Container starts Lutris on debug mode
         self.container = self.client.containers.create(image=self.image, auto_remove=True,
                                                        command=[f"{LUTRIS_PATH}", "-d"],
+                                                       # tty=True,
+                                                       # command=[f"bash"],
                                                        devices=self.devices,
                                                        environment=self.envs, shm_size=SHM_SIZE,
                                                        volumes=self.volumes)
@@ -87,6 +89,10 @@ class ContainerRuntime:
     def get_environment(self):
         # Display value for Xorg
         self.envs["DISPLAY"] = os.environ.get("DISPLAY")
+        # Wayland
+        self.envs["WAYLAND_DISPLAY"] = os.environ.get("WAYLAND_DISPLAY")
+        self.envs["XDG_RUNTIME_DIR"] = "/tmp"
+        self.envs["XDG_SESSION_TYPE"] = "x11"  # Wayland: wayland
 
     def define_devices(self):
         # GPUs via direct rendering
