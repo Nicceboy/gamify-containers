@@ -39,10 +39,7 @@ This step is not automated, user should be aware of the changes.
 
 To be able to get sound from the container, Unix socket for PulseAudio must be created beforehand. This can be achieved by modifying configuration files and then restarting server.
 
-Server access will enabled by copying user specific PulseAudio cookie into container. By default it is looked from the path:
-```
-~/.config/pulse/cookie
-```
+Server access will enabled by copying user specific PulseAudio cookie into container. By default it is looked from the path  ~/.config/pulse/cookie`
 
 Look for user-specific pulse configuration file in path:
 ```
@@ -65,6 +62,15 @@ Socket should be available.
 $ file /tmp/pulse-socket
 /tmp/pulse-socket: socket
 ```
+
+## Configuring Display
+
+Currently only X server is supported.
+Xauthority token is copied into container and Xorg Unix socket is shared as volume in to container.
+
+By default, path `/tmp/.X11-unix` will be used.
+
+`xauth` command is expected to be found from the host machine.
 
 ## Graphic Cards
 

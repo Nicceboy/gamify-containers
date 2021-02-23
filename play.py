@@ -20,6 +20,7 @@ SHM_SIZE = "4g"
 PULSE_SOCKET = "/tmp/pulse-socket"
 X_SOCKET_DIR = "/tmp/.X11-unix"
 LUTRIS_PATH = "/opt/lutris/bin/lutris"
+PULSE_COOKIE_PATH = ".config/pulse/cookie"
 
 
 class ContainerRuntime:
@@ -127,7 +128,7 @@ class ContainerRuntime:
 
     def set_pulse_token(self):
         # Copy user specific pulse cookie into container
-        pulse_cookie = pathlib.Path(".config/pulse/cookie")
+        pulse_cookie = pathlib.Path(PULSE_COOKIE_PATH)
         pulse_cookie_full = pathlib.Path.home() / pulse_cookie
         if pulse_cookie_full.is_file():
             with pulse_cookie_full.open("rb") as f:
@@ -138,7 +139,7 @@ class ContainerRuntime:
         else:
             self.logger.warning(f"No pulse token found from the path {pulse_cookie_full}")
 
-    def upload_tar(self, name, path, data):
+    def upload_tar(self, name: str, path: str, data: bytes):
         tar_stream = io.BytesIO()
         tar_file = tarfile.TarFile(fileobj=tar_stream, mode="w")
         tar_info = tarfile.TarInfo(name=name)
