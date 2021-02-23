@@ -35,7 +35,7 @@ class ContainerRuntime:
         self.devices: List = []
         self.pulse_path = pathlib.Path(pulse_path)
         self.x_path = pathlib.Path(x_path)
-        self.main_volume = f"/home/{USER_NAME}"
+        self.home = f"/home/{USER_NAME}"
         self.define_volumes()
         self.define_devices()
         self.get_environment()
@@ -51,6 +51,7 @@ class ContainerRuntime:
                                                        environment=self.envs, shm_size=SHM_SIZE,
                                                        volumes=self.volumes)
         self.set_x_auth_token()
+        self.set_pulse_token()
         self.socket = self.container.attach_socket(
             params={"logs": False, "stream": True, "stdout": True, "stderr": True, "stdin": False})
 
@@ -77,7 +78,7 @@ class ContainerRuntime:
         except docker.errors.NotFound:
             self.logger.info(f"No existing volume found with name {VOLUME_NAME}, creating new one.")
             volume = self.client.volumes.create(name=VOLUME_NAME, driver='local')
-        self.volumes[volume.id] = {"bind": self.main_volume, "mode": "rw"}
+        self.volumes[volume.id] = {"bind": self.home, "mode": "rw"}
 
         self.logger.info("Following volume(s) exposed from the host:")
         for key in self.volumes.keys():
@@ -114,16 +115,7 @@ class ContainerRuntime:
             # Convert to bytes... again
             key = key.encode("utf-8")
             # Copy data into container to avoid volume usage
-            tar_stream = io.BytesIO()
-            tar_file = tarfile.TarFile(fileobj=tar_stream, mode="w")
-            tar_info = tarfile.TarInfo(name='.Xkey')
-            tar_info.size = len(key)
-            tar_info.mtime = time()
-            tar_info.mode = 0o0600
-            tar_file.addfile(tar_info, io.BytesIO(key))
-            tar_file.close()
-            tar_stream.seek(0)
-            resp = self.container.put_archive("/root/", tar_stream)
+            resp = self.upload_tar(".Xkey", "/root/", key)
             if not resp:
                 self.logger.error("Failed to upload xauth information into container. Display won't work.")
             else:
@@ -132,6 +124,32 @@ class ContainerRuntime:
             self.logger.error(
                 "You must have 'xauth' command line command available and to return"
                 " Xauthority information to make display to work.")
+
+    def set_pulse_token(self):
+        # Copy user specific pulse cookie into container
+        pulse_cookie = pathlib.Path(".config/pulse/cookie")
+        pulse_cookie_full = pathlib.Path.home() / pulse_cookie
+        if pulse_cookie_full.is_file():
+            with pulse_cookie_full.open("rb") as f:
+                data = f.read()
+                resp = self.upload_tar("pulse_cookie", f"/root/", data)
+                if not resp:
+                    self.logger.warning("Failed to upload pulseaudio auth token.")
+        else:
+            self.logger.warning(f"No pulse token found from the path {pulse_cookie_full}")
+
+    def upload_tar(self, name, path, data):
+        tar_stream = io.BytesIO()
+        tar_file = tarfile.TarFile(fileobj=tar_stream, mode="w")
+        tar_info = tarfile.TarInfo(name=name)
+        tar_info.size = len(data)
+        tar_info.mtime = time()
+        tar_info.mode = 0o0600
+        tar_file.addfile(tar_info, io.BytesIO(data))
+        tar_file.close()
+        tar_stream.seek(0)
+        resp = self.container.put_archive(path, tar_stream)
+        return resp
 
 
 def main():
