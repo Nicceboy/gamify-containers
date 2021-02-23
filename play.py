@@ -13,12 +13,13 @@ from typing import Dict, List
 
 # Default values
 
+USER_NAME = "lutris"
 DEFAULT_IMAGE = "lutris-vulkan"
-VOLUME_NAME = "winehome"
+VOLUME_NAME = "lutrishome"
 SHM_SIZE = "4g"
 PULSE_SOCKET = "/tmp/pulse-socket"
 X_SOCKET_DIR = "/tmp/.X11-unix"
-LUTRIS_RELATIVE_PATH = "lutris/bin/lutris"
+LUTRIS_PATH = "/opt/lutris/bin/lutris"
 
 
 class ContainerRuntime:
@@ -34,9 +35,9 @@ class ContainerRuntime:
         self.devices: List = []
         self.pulse_path = pathlib.Path(pulse_path)
         self.x_path = pathlib.Path(x_path)
-        self.main_volume = "/home/wineuser"
+        self.main_volume = f"/home/{USER_NAME}"
         self.define_volumes()
-        self.pass_devices()
+        self.define_devices()
         self.get_environment()
         try:
             self.image = self.client.images.get(image)
@@ -45,7 +46,7 @@ class ContainerRuntime:
             sys.exit(1)
         # Container starts Lutris on debug mode
         self.container = self.client.containers.create(image=self.image, auto_remove=True,
-                                                       command=[f"{self.main_volume}/{LUTRIS_RELATIVE_PATH}", "-d"],
+                                                       command=[f"{LUTRIS_PATH}", "-d"],
                                                        devices=self.devices,
                                                        environment=self.envs, shm_size=SHM_SIZE,
                                                        volumes=self.volumes)
@@ -73,11 +74,10 @@ class ContainerRuntime:
         # Volume for wine prefix or home directory
         try:
             volume = self.client.volumes.get(VOLUME_NAME)
-            self.volumes[volume.id] = {"bind": self.main_volume, "mode": "rw"}
         except docker.errors.NotFound:
-            self.logger.debug(f"No existing volume found with name {VOLUME_NAME}")
-            self.logger.error("Creation not implemented yet..exiting..")
-            sys.exit(1)
+            self.logger.info(f"No existing volume found with name {VOLUME_NAME}, creating new one.")
+            volume = self.client.volumes.create(name=VOLUME_NAME, driver='local')
+        self.volumes[volume.id] = {"bind": self.main_volume, "mode": "rw"}
 
         self.logger.info("Following volume(s) exposed from the host:")
         for key in self.volumes.keys():
@@ -87,7 +87,7 @@ class ContainerRuntime:
         # Display value for Xorg
         self.envs["DISPLAY"] = os.environ.get("DISPLAY")
 
-    def pass_devices(self):
+    def define_devices(self):
         # GPUs via direct rendering
         # Tested only on integrated Intel
         gpu_path = pathlib.Path("/dev/dri")
@@ -157,7 +157,11 @@ def main():
                 # No use for header yet
                 # header = data[:8]
                 body = data[8:]
-                print(body.decode("utf-8"), end="")
+                try:
+                    print(body.decode("utf-8"), end="")
+                except UnicodeDecodeError:
+                    print(str(body), end="")
+
                 # print("NEWLINE")
         else:
             logger.info("Leaving and not printing Lutris logs in detached mode.")
