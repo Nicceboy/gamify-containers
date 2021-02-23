@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='lutris-docker',
-    version="0.1", 
+    version="0.1.0", 
     author="Niklas Saari",
     author_email="niklas.saari@tutanota.com",
     description='Play Windows games on Linux containers with Lutris',
