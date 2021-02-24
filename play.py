@@ -13,7 +13,7 @@ from typing import Dict, List
 # Default values
 
 USER_NAME = "lutris"
-DEFAULT_IMAGE = "lutris-vulkan"
+DEFAULT_IMAGE = "ghcr.io/nicceboy/lutris-vulkan"
 VOLUME_NAME = "lutrishome"
 SHM_SIZE = "4g"
 PULSE_SOCKET = "/tmp/pulse-socket"
@@ -103,13 +103,16 @@ class ContainerRuntime:
             self.logger.debug(f"GPUs found from the path: {gpu_path}")
         else:
             self.logger.warning(f"DRI path not found from: {gpu_path}. GPUs might not be accessible.")
-        # sound cards
-        snd_path = pathlib.Path("/dev/snd")
-        if snd_path.is_dir():
-            # self.devices.append(f"{str(snd_path)}:{str(snd_path)}")
-            self.logger.debug(f"Sound cards found in path: {snd_path}")
-        else:
-            self.logger.warning(f"No sound card devices found from the path {snd_path}")
+        # sound cards - currently no need noticed
+        # snd_path = pathlib.Path("/dev/snd")
+        # if snd_path.is_dir():
+        #     self.devices.append(f"{str(snd_path)}:{str(snd_path)}")
+        #     self.logger.debug(f"Sound cards found in path: {snd_path}")
+        # else:
+        #     self.logger.warning(f"No sound card devices found from the path {snd_path}")
+        for device in self.devices:
+            self.logger.info("Following devices shared into container:")
+            self.logger.info(device)
 
     def set_x_auth_token(self):
         # Use xauth to get x-authority token to grant display access for container

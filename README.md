@@ -2,11 +2,11 @@
 
 This project essentially attempts to set suitable environment for running Windows games from Linux containers. Python script is used to run specifically made container. Docker has been used as container engine.
 
-Game installation and management is handled with [Lutris](https://lutris.net/) which attempts to automate a lot of painful stuff, such as managing suitable Wine versions, required dependencies for game to be functional and handling runner environments such as [dxvk](https://github.com/doitsujin/dxvk) for DirectX to Vulkan transitions for performance boost.
+Game installation, running and other management is handled with [Lutris](https://lutris.net/) which attempts to automate a lot of painful stuff, such as managing suitable Wine versions, required dependencies for game to be functional and handling runner environments such as [dxvk](https://github.com/doitsujin/dxvk) for DirectX to Vulkan transitions for performance boost.
 
 In practice, provided Python script opens the graphical user interface of the Lutris from the container while configuring display and sound redirections.
 
-Game data, Wine prefix and Lutris environment is stored in volume.
+Game data, Wine prefix and Lutris environment is stored in volume which is named as `lutrishome`.
 Runtime Linux is defined in Docker image. See Dockerfile for [reference.](Dockerfile)
 
 ## Why the hassle
@@ -27,7 +27,16 @@ docker pull ghcr.io/nicceboy/lutris-vulkan
 
 Configure [sound.](#configuring-sound)
 
+Code can be installed as package:
+```
+pip install git+https://github.com/Nicceboy/gamify-containers
+```
 
+Launch Lutris from container!
+
+```
+playlutris
+```
 
 ## Prerequisites
   * Docker Engine
