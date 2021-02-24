@@ -16,7 +16,7 @@ Runtime Linux is defined in Docker image. See Dockerfile for [reference.](Docker
 
   * Setting up your specific GPU drivers with Vulkan support, Wine and other mandatory software comes with a lot of dependencies, and you *might not always want* to get those in your host system
   * Isolated code execution, at least on some level. Exposed components are listed on [exposed components](#exposed-components-from-the-host) section.
-  * Easier version upgrade on those packages
+  * Easier version upgrade on those packages and possible re-use of older environment if something breaks
   * If you need some space, it is easy to just delete Docker image(s) but maintain the game data itself from volumes.
 
 This has probably downside for performance, but sometimes it is not that meaningful.
