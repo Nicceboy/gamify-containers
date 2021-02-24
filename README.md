@@ -101,6 +101,10 @@ By default, graphic cards are passed as devices into container from the path `/d
 
 ## Exposed components from the host
 
+Writeable named volume
+
+  * lutrishome
+
 Following paths are exposed with read-only binds from the host system into container.
 
  * Xorg server - `/tmp/.X11-unix`
