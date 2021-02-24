@@ -18,6 +18,17 @@ Runtime Linux is defined in Docker image. See Dockerfile for [reference.](Docker
 
 This has probably downside for performance, but sometimes it is not that meaningful.
 
+## Usage
+
+You can pull required Docker image with command:
+```
+docker pull ghcr.io/nicceboy/lutris-vulkan
+```
+
+Configure [sound.](#configuring-sound)
+
+
+
 ## Prerequisites
   * Docker Engine
   * PulseAudio as audio server on host (PipeWire maybe some day)
@@ -62,11 +73,11 @@ $ file /tmp/pulse-socket
 ## Display Server
 
 At the moment, pure Wayland applications are not supported.
-X applications are still usable with Wayland because it provides XWayland compositor which is intended for them. 
+X applications are still usable with Wayland because it provides XWayland compositor. 
 
 There is difference how XWayland and traditional X server behaves; XWayland seems to require same UID than server itself, when socket is accessed. Regular X does not. This has impact for user namespace on underlying container; same needs to be used and therefore less isolation is achieved.
 
-Xauthority token is copied into container and X Unix socket is shared as volume in to container.
+To authenticate container for using X, Xauthority token is copied into container and X Unix socket is shared as volume in to container.
 
 By default, path `/tmp/.X11-unix` will be used.
 
@@ -84,7 +95,6 @@ Following paths are exposed with read-only binds from the host system into conta
  * PulseAudio socket - `/tmp/pulse-socket`
  
  Passed as devices
- * Sound cards - `/dev/snd`
  * Graphic cards - `/dev/dri`
  
  ## Command line commands without using Python
