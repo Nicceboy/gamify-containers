@@ -106,7 +106,7 @@ class ContainerRuntime:
         # sound cards
         snd_path = pathlib.Path("/dev/snd")
         if snd_path.is_dir():
-            self.devices.append(f"{str(snd_path)}:{str(snd_path)}")
+            # self.devices.append(f"{str(snd_path)}:{str(snd_path)}")
             self.logger.debug(f"Sound cards found in path: {snd_path}")
         else:
             self.logger.warning(f"No sound card devices found from the path {snd_path}")

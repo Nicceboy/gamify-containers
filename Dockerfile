@@ -71,16 +71,10 @@ ENV USER_UID=1000
 ENV USER_GID=${USER_UID}
 ENV USER_NAME="lutris"
 ENV USER_HOME="/home/${USER_NAME}"
-ENV PULSE_GROUP="pulseaudio"
 
 RUN groupadd --gid "${USER_GID}" "${USER_NAME}" && \
     useradd --shell /bin/bash --uid "${USER_UID}" --gid "${USER_GID}" \
       --no-create-home --home-dir "${USER_HOME}" "${USER_NAME}"
-
-# Create group for pulseaudio and add user into it to limit permissions a bit
-RUN groupadd "${PULSE_GROUP}" && usermod -a -G  "${PULSE_GROUP}" "${USER_NAME}"
-
-
 
 # Disable some dbus warnings
 ENV NO_AT_BRIDGE 1
