@@ -1,5 +1,8 @@
 # Gamifying containers - play your Windows games on Linux containers with Lutris and Wine
 
+![build](https://img.shields.io/github/workflow/status/Nicceboy/gamify-containers/Docker) ![License](https://img.shields.io/github/license/Nicceboy/gamify-containers) 
+
+
 This project essentially attempts to set suitable environment for running Windows games from Linux containers. Python script is used to run specifically made container. Docker has been used as container engine.
 
 Game installation, running and other management is handled with [Lutris](https://lutris.net/) which attempts to automate a lot of painful stuff, such as managing suitable Wine versions, required dependencies for game to be functional and handling runner environments such as [dxvk](https://github.com/doitsujin/dxvk) for DirectX to Vulkan transitions for performance boost.
