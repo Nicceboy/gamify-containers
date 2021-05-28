@@ -36,5 +36,7 @@ if [ -f /root/pulse_cookie ]; then
     cp /root/pulse_cookie "${USER_HOME}/.config/pulse/cookie"
     chown "${USER_UID}":"${USER_GID}" "${USER_HOME}/.config/pulse/cookie"
 fi
+# Copy group permissions of GPU for lutris user to enable rendering in some cases
+usermod -a -G $(stat -c %g /dev/dri/card0) lutris
 # Switch to non-root user
 exec gosu "${USER_NAME}" "$@"
