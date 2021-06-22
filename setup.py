@@ -14,7 +14,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/nicceboy/gamify-containers",
     py_modules=['play'],
-    install_requires=['docker>=4.3.3'],
+    install_requires=['docker>=4.3.3', 'six'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

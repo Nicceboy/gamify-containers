@@ -11,7 +11,9 @@ import tarfile
 from typing import Dict, List
 
 # Default values
-
+HOSTNAME = os.uname()[1]
+UID = os.getuid()
+GID = UID
 USER_NAME = "lutris"
 DEFAULT_IMAGE = "ghcr.io/nicceboy/lutris-vulkan"
 VOLUME_NAME = "lutrishome"
@@ -44,7 +46,12 @@ class ContainerRuntime:
         except docker.errors.NotFound:
             self.logger.error("Image pull not implemented yet.")
             sys.exit(1)
+        # Get current UID to set same for container, to enable access for audio sockets
+        self.logger.info(f"Current UID: {UID}")
+        self.envs["USER_UID"] = UID
+        self.envs["USER_GID"] = GID
         # Container starts Lutris on debug mode
+ 
         self.container = self.client.containers.create(image=self.image, auto_remove=True,
                                                        command=[f"{LUTRIS_PATH}", "-d"],
                                                        # tty=True,
@@ -66,6 +73,8 @@ class ContainerRuntime:
         else:
             self.logger.warning(f"Socket for Pulseaudio from the path '{self.pulse_path}'"
                                 " not found. Sounds will not work.")
+        self.volumes["/run/user/1000/pulse/native"] = {"bind": "/run/user/1000/pulse/native", "mode": "ro"}
+        self.envs["PULSE_SERVER"] = "/run/user/1000/pulse/native"
         # Xorg directory, read-only
         if self.x_path.is_dir():
             self.volumes[str(self.x_path)] = {"bind": str(self.x_path), "mode": "ro"}
@@ -119,8 +128,16 @@ class ContainerRuntime:
         output = subprocess.run(["xauth", "list"], capture_output=True)
         if not output.stderr:
             buf = io.StringIO(output.stdout.decode("utf-8"))
-            first_line = buf.readline()
-            key = first_line.split()[-1]
+            lines = buf.readlines()
+            for line in lines:
+                if line.startswith(HOSTNAME):
+                    matching_line = line
+                    break
+            if matching_line:
+                key = matching_line.split()[-1]
+            else:
+                self.logger.error("No matching xauth token found for current hostname")
+                sys.exit(1)
             # Convert to bytes... again
             key = key.encode("utf-8")
             # Copy data into container to avoid volume usage
@@ -169,8 +186,10 @@ def main():
                         help="Set the logging level", default="INFO")
     parser.add_argument("-d", "--detach", action="store_true",
                         help="Run detached.")
-    parser.add_argument("--pulse", help="Set path for PulseAudio socket.", default=PULSE_SOCKET)
-    parser.add_argument("--xorg", help="Set path for X socket directory.", default=X_SOCKET_DIR)
+    parser.add_argument("--pulse", help="Set path for PulseAudio socket. Also used with PipeWire.", default=PULSE_SOCKET)
+    display_group = parser.add_mutually_exclusive_group()
+    display_group.add_argument("--xorg", help="Set path for X socket directory.", default=X_SOCKET_DIR)
+    display_group.add_argument("--wayland", help="Set path for Xwayland socket directory.", default=X_SOCKET_DIR)
     args = parser.parse_args(args=sys.argv[1:])
     log_level = args.log_level if args.log_level else 'INFO'
     if log_level not in {'DEBUG'}:

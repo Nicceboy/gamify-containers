@@ -43,7 +43,7 @@ playlutris
 
 ## Prerequisites
   * Docker Engine
-  * PulseAudio as audio server on host (PipeWire maybe some day)
+  * PulseAudio as audio server on host (PipeWire supported with pipewire-pulse)
   * Xorg display server (Wayland support maybe in future) on host
   * Python 3
   
@@ -52,7 +52,9 @@ On Debian based system, packages can be installed with
 apt-get update && apt-get install pulseaudio docker.io python3
 ```
 
-## Configuring sound
+## Configuring sound 
+
+### PulseAudio host
 
 This step is not automated, user should be aware of the changes.
 
@@ -82,6 +84,15 @@ $ file /tmp/pulse-socket
 /tmp/pulse-socket: socket
 ```
 
+### PipeWire Host (With pipewire-pulse)
+
+PipeWire host should work out of the box, without a need for authentication tokens.
+Container user must have the same UID than the socket.
+By default, pipewire-pulse socket is mounted as read-only from the path `/run/user/1000/pulse/native`.
+
+Change path with `--pulse` parameter.
+
+
 ## Display Server
 
 At the moment, pure Wayland applications are not supported.
@@ -95,9 +106,28 @@ By default, path `/tmp/.X11-unix` will be used.
 
 `xauth` command is expected to be found from the host machine.
 
+X server might use shared memory, which is inaccessible by containers, and could cause some errors. To allow access for shared memory
+`--ipc=host` parameter could be used to disable IPC namespacing.
+
+
+### Xwayland
+
 ## Graphic Cards
 
 By default, graphic cards are passed as devices into container from the path `/dev/dri`. Provided image has AMD and Intel drivers installed, with 32 and 64-bit Vulkan support. NVIDIA drivers should be installed manually, if there is need for them.
+
+
+Sometimes there might be problems with Vulkan functionality, just in case make sure that Kernel is booted with AMD support.
+
+Check `cat /proc/cmdline` and it should have
+
+```console
+radeon.si_support=0 radeon.cik_support=0 amdgpu.si_support=1 amdgpu.cik_support=1 modprobe.blacklist=radeon
+```
+
+? https://github.com/nixinator/nixpkgs-gourse/issues/1#issuecomment-751449180
+
+On later GPU:s, it seems that GPU is not detected properly, for unknown reasons.
 
 ## Exposed components from the host
 
@@ -108,7 +138,7 @@ Writeable named volume
 Following paths are exposed with read-only binds from the host system into container.
 
  * Xorg server - `/tmp/.X11-unix`
- * PulseAudio socket - `/tmp/pulse-socket`
+ * PulseAudio socket - `/tmp/pulse-socket` or pipewire-pulse `/run/user/1000/pulse/native`
  
  Passed as devices
  * Graphic cards - `/dev/dri`

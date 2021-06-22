@@ -10,6 +10,7 @@ ln -snf "/usr/share/zoneinfo/${TZ}" /etc/localtime && echo "${TZ}" > /etc/timezo
 OWNER_IDS="$(stat -c "%u:%g" "${USER_HOME}")"
 if [ "${OWNER_IDS}" != "${USER_UID}:${USER_GID}" ]; then
     if [ "${OWNER_IDS}" == "0:0" ]; then
+        echo "Changing home ownership for user $USER_UID"
         chown -R "${USER_UID}":"${USER_GID}" "${USER_HOME}"
     else
         echo "ERROR: User's home '${USER_HOME}' is currently owned by $(stat -c "%U:%G" "${USER_HOME}")"
@@ -34,9 +35,12 @@ fi
 if [ -f /root/pulse_cookie ]; then
     mkdir -p "${USER_HOME}/.config/pulse/"
     cp /root/pulse_cookie "${USER_HOME}/.config/pulse/cookie"
-    chown "${USER_UID}":"${USER_GID}" "${USER_HOME}/.config/pulse/cookie"
+    chown -R "${USER_UID}":"${USER_GID}" "${USER_HOME}/.config"
 fi
 # Copy group permissions of GPU for lutris user to enable rendering in some cases
-usermod -a -G $(stat -c %g /dev/dri/card0) lutris
+VIDEO_GID="$(stat -c %g /dev/dri/card0)"
+groupdel video
+groupadd -fog $VIDEO_GID video
+usermod -a -G video lutris
 # Switch to non-root user
 exec gosu "${USER_NAME}" "$@"

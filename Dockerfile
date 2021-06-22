@@ -3,6 +3,8 @@ ENV DEBIAN_FRONTEND="noninteractive"
 ARG WINE_BRANCH="stable"
 
 RUN dpkg --add-architecture i386 \
+    # Support non-free packages (AMD Microcode)
+    && sed -i 's/deb http:\/\/deb.debian.org\/debian buster main/deb http:\/\/deb.debian.org\/debian buster main contrib non-free/g' /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         dbus-x11 \
@@ -28,6 +30,8 @@ RUN dpkg --add-architecture i386 \
         vulkan-utils \
         mesa-vulkan-drivers \
         mesa-vulkan-drivers:i386 \
+        xserver-xorg-video-all \
+        firmware-amd-graphics \
         libvulkan1 \
         libvulkan1:i386 \
         libglx-mesa0 \
@@ -65,6 +69,8 @@ RUN mkdir -p /tmp/lutris && \
     mkdir -p /opt/lutris && \
     tar -C /opt/lutris --strip-components 1 -xf /tmp/lutris/lutris && \
     rm -rf /tmp/lutris
+
+RUN apt-get update && apt-get install alsa-utils -y
 
 # Adduser
 ENV USER_UID=1000
