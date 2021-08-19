@@ -113,10 +113,10 @@ class ContainerRuntime:
         else:
             self.logger.warning(f"DRI path not found from: {gpu_path}. GPUs might not be accessible.")
         # sound cards - currently no need noticed
-        # snd_path = pathlib.Path("/dev/snd")
-        # if snd_path.is_dir():
-        #     self.devices.append(f"{str(snd_path)}:{str(snd_path)}")
-        #     self.logger.debug(f"Sound cards found in path: {snd_path}")
+        snd_path = pathlib.Path("/dev/snd")
+        if snd_path.is_dir():
+            self.devices.append(f"{str(snd_path)}:{str(snd_path)}")
+            self.logger.debug(f"Sound cards found in path: {snd_path}")
         # else:
         #     self.logger.warning(f"No sound card devices found from the path {snd_path}")
         for device in self.devices:

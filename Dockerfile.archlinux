@@ -36,6 +36,8 @@ RUN sed -i '$ a\[multilib]\nInclude = \/etc\/pacman.d\/mirrorlist' /etc/pacman.c
     python-magic \
     gnome-desktop \
     webkit2gtk \
+    zenity \ 
+    lib32-libpulse \
     wine \
     unzip \
     p7zip && \
