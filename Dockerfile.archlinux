@@ -2,8 +2,11 @@ FROM archlinux:latest
 
 ENV GOSU_VERSION=1.13
 
-RUN sed -i '$ a\[multilib]\nInclude = \/etc\/pacman.d\/mirrorlist' /etc/pacman.conf && \
-    pacman-key --init && \
+# We need all locales for Steam https://github.com/ValveSoftware/steam-for-linux/issues/5738
+RUN sed -i '/^NoExtract/d' /etc/pacman.conf && \
+    pacman-key --init && pacman -Sy && \
+    pacman -Qqn | pacman -S --noconfirm - && \
+    sed -i '$ a\[multilib]\nInclude = \/etc\/pacman.d\/mirrorlist' /etc/pacman.conf && \
     pacman -Syu --noconfirm && \
     pacman -S --noconfirm \
     jq \
@@ -40,6 +43,15 @@ RUN sed -i '$ a\[multilib]\nInclude = \/etc\/pacman.d\/mirrorlist' /etc/pacman.c
     lib32-libpulse \
     wine \
     unzip \
+    # glxinfo util
+    mesa-demos \ 
+    diffutils \
+    # Required for some MS dependecy installing
+    cabextract \ 
+    steam \
+    # gstreamer
+    gst-plugins-good \
+    lib32-gst-plugins-good \
     p7zip && \
     # Install gosu https://github.com/tianon/gosu
     curl -o /usr/bin/gosu -L "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64" && \
