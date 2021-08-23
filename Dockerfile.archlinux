@@ -42,15 +42,20 @@ RUN sed -i '/^NoExtract/d' /etc/pacman.conf && \
     zenity \ 
     lib32-libpulse \
     wine \
+    samba \
     unzip \
     # glxinfo util
     mesa-demos \ 
-    diffutils \
     # Required for some MS dependecy installing
     cabextract \ 
+    # Steam-only dependencies
+    diffutils \
+    # Steam requires namespaces, bwrap can do it without all capabilities
+    bubblewrap-suid \
     steam \
     # gstreamer
     gst-plugins-good \
+    lib32-gst-plugins-base \
     lib32-gst-plugins-good \
     p7zip && \
     # Install gosu https://github.com/tianon/gosu
@@ -83,6 +88,7 @@ RUN groupadd --gid "${USER_GID}" "${USER_NAME}" && \
 
 # Disable some dbus warnings
 ENV NO_AT_BRIDGE 1
+
 COPY pulse-client.conf /root/pulse/client.conf
 COPY entrypoint.sh /usr/bin/entrypoint
 ENTRYPOINT ["/usr/bin/entrypoint"]
