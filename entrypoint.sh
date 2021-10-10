@@ -42,5 +42,13 @@ VIDEO_GID="$(stat -c %g /dev/dri/card0)"
 groupdel video
 groupadd -fog $VIDEO_GID video
 usermod -a -G video lutris
+# Audio group required for ALSA (kernel permission)
+usermod -aG audio "${USER_NAME}"
+
+# Clean embedded Stream Runtime libraries to force native usage
+find /home/${USER_NAME}/.local/share/Steam/ -name 'libgpg-error.so*' -delete && \
+find /home/${USER_NAME}/.local/share/Steam/ -name 'libstdc++*' -delete && \
+find /home/${USER_NAME}.local/share/Steam/ -name 'libgcc_s.so*' -delete
+
 # Switch to non-root user
 exec gosu "${USER_NAME}" "$@"

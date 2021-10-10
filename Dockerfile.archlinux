@@ -57,10 +57,16 @@ RUN sed -i '/^NoExtract/d' /etc/pacman.conf && \
     gst-plugins-good \
     lib32-gst-plugins-base \
     lib32-gst-plugins-good \
+    # Steam runtime deps
+    lib32-gtk2 \
+    lib32-pipewire \
+    lib32-libva \
+    lib32-libvdpau \
     p7zip && \
     # Install gosu https://github.com/tianon/gosu
     curl -o /usr/bin/gosu -L "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64" && \
     chmod +x /usr/bin/gosu
+
 
 # winetricks
 RUN curl -Lo /usr/bin/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
@@ -79,7 +85,20 @@ ENV USER_UID=1000
 ENV USER_GID=${USER_UID}
 ENV USER_NAME="lutris"
 ENV USER_HOME="/home/${USER_NAME}"
+# Disable Steam runtime
+ENV STEAM_RUNTIME=0
+ENV STEAM_RUNTIME_HEAVY=0
+# ENV LD_PRELOAD="/usr/lib64/libstdc++.so.6 /usr/lib32/libstdc++.so.6"
 
+# Additionally, might need to add manually
+# shift 4
+# exec "${@}"
+# into the file <steam-library>/steamapps/common/SteamLinuxRuntime_soldier/_v2-entry-point
+# https://github.com/flightlessmango/MangoHud/issues/369
+#
+
+
+# User needs audio group for raw ALSA to work
 RUN groupadd --gid "${USER_GID}" "${USER_NAME}" && \
     useradd --shell /bin/bash --uid "${USER_UID}" --gid "${USER_GID}" \
       --no-create-home --home-dir "${USER_HOME}" "${USER_NAME}" && \
@@ -92,4 +111,3 @@ ENV NO_AT_BRIDGE 1
 COPY pulse-client.conf /root/pulse/client.conf
 COPY entrypoint.sh /usr/bin/entrypoint
 ENTRYPOINT ["/usr/bin/entrypoint"]
-
