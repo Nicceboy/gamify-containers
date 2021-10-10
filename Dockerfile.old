@@ -80,7 +80,8 @@ ENV USER_HOME="/home/${USER_NAME}"
 
 RUN groupadd --gid "${USER_GID}" "${USER_NAME}" && \
     useradd --shell /bin/bash --uid "${USER_UID}" --gid "${USER_GID}" \
-      --no-create-home --home-dir "${USER_HOME}" "${USER_NAME}"
+      --no-create-home --home-dir "${USER_HOME}" "${USER_NAME}" && \
+    usermod -aG audio "${USER_NAME}"
 
 # Disable some dbus warnings
 ENV NO_AT_BRIDGE 1
